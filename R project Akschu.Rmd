@@ -1,0 +1,149 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```{r}
+#Importing the dataset
+train <- read.csv("C:\\Users\\Hanish\\Downloads\\train.csv")
+head(train)
+test <- read.csv("C:\\Users\\Hanish\\Downloads\\test.csv")
+head(test)
+```
+```{r}
+#Exploratory Data Analysis
+str(train)
+library(tidyverse)
+install.packages('VIM')
+library(VIM)
+aggr(train)
+```
+```{r}
+
+```
+
+
+```{r}
+#Target analysis
+library(plyr)
+price_range <- train$price_range
+count(price_range)
+```
+
+
+```{r}
+library(ggplot2)
+library(dplyr)
+install.packages('hrbrthemes')
+library(hrbrthemes)
+```
+
+
+```{r}
+```
+
+
+```{r}
+p <- ggplot(train,aes(x=as.factor(price_range), y=battery_power, fill=as.factor(price_range))) + geom_boxplot()
+p
+```
+
+
+```{r}
+mu <- ddply(train,'price_range', summarise, grp.mean = mean(ram))
+head(mu)
+```
+
+
+```{r}
+p <- ggplot(train, aes(x=ram, y = price_range, fill = as.factor(price_range)))+
+  geom_histogram(aes(y=..density..), position = 'identity', alpha=0.5) +
+  labs(title="ram histogram plot",x="RAM", y = "Density")
+p
+```
+
+
+```{r}
+#Internal Memory VS Price_range
+p <- ggplot(train,aes(x=as.factor(price_range), y=int_memory, fill=as.factor(price_range))) + 
+  geom_boxplot()
+p
+```
+
+```{r}
+mu <- ddply(train,'price_range', summarise, grp.mean = mean(int_memory))
+head(mu)
+```
+
+
+
+```{r}
+library(caret)
+X_train<- train[,-21]
+Y_train <- train[,21]
+
+set.seed(42)
+test_inds = createDataPartition(y = 1:length(Y_train), p = 0.2, list = F)
+
+X_train_test = X_train[test_inds, ]; y_train_test = Y_train[test_inds] 
+X_train_train = X_train[-test_inds, ]; y_train_train = Y_train[-test_inds]
+
+length(y_train_test)
+X_train_scaled <- scale(X_train_train)
+
+library(class)
+```
+
+
+```{r}
+#feature
+install.packages('mlbench')
+library(mlbench)
+library(caret)
+correlationMatrix <- cor(X_train_scaled)
+print(correlationMatrix)
+highlyCorrelated <- findCorrelation(correlationMatrix, cutoff=0.5)
+print(highlyCorrelated)
+```
+```{r}
+library(datasets)
+library(caTools)
+install.packages('party')
+library(party)
+library(dplyr)
+library(magrittr)
+model<- ctree(price_range ~ sc_h + ram, data = X_train)
+plot(model)
+```
+
+```{r}
+library(randomForest)
+rf <- randomForest(as.factor(y_train_train) ~ ., data= as.data.frame(X_train_scaled))
+plot(rf)
+```
+```{r}
+varImpPlot(rf)
+```
+```{r}
+y_train_test_pred <- predict(rf, newdata= X_train_test, type='class')
+y_train_test_pred
+```
+
+
+```{r}
+confusionMatrix(as.factor(y_train_test_pred), as.factor(y_train_test))
+```
+
